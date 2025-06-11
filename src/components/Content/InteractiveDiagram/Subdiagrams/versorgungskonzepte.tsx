@@ -1,5 +1,6 @@
 import { tryRegisterDiagram } from "../utils/diagramRegistry";
 import { createTreeDiagram } from "../utils/diagramFactory";
+import { Position } from "@xyflow/react";
 import type {
   TreeFactoryNodeConfig,
   TreeFactoryOptions,
@@ -51,12 +52,12 @@ export function registerVSKSubdiagram() {
 
     // Definiere die spezifischen ELK-Optionen
     const vskElkOptions: ElkLayoutOptions = {
-      "elk.algorithm": "layered",
+   "elk.algorithm": "layered",
       "elk.direction": "RIGHT",
-      "org.eclipse.elk.edgeRouting": "ORTHOGONAL", // Wichtig für saubere Kantenführung
       "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "80", // Abstand zwischen den "Ebenen"
       "org.eclipse.elk.spacing.nodeNode": "30", // Abstand zwischen Knoten auf derselben Ebene
       "org.eclipse.elk.layered.considerModelOrder.strategy": "PORTS_EAST_WEST",
+      "org.eclipse.elk.layered.nodePlacement.strategy": "LINEAR_SEGMENTS",
       "org.eclipse.elk.portConstraints": "FIXED_SIDE",
     };
 
@@ -64,6 +65,8 @@ export function registerVSKSubdiagram() {
       nodeIdPrefix: "vsk-tree",
       defaultClassName: "versorgungskonzepte-node",
       elkOptions: vskElkOptions,
+      defaultTargetPosition: Position.Left,
+      defaultSourcePosition: Position.Right,
     };
 
     createTreeDiagram(diagramId, tech4BiowasteTree, options);
