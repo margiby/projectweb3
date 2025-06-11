@@ -16,6 +16,8 @@ export function createTreeDiagram(
     nodeIdPrefix = diagramId + "-n", // Standardpräfix basierend auf diagramId
     defaultNodeType = "default",
     elkOptions,
+     defaultTargetPosition,
+    defaultSourcePosition,
   } = options;
 
   function processNodeConfig(config: TreeFactoryNodeConfig, parentNodeId?: string): string {
@@ -29,6 +31,8 @@ export function createTreeDiagram(
       data: config.data,       
       type: config.type || defaultNodeType,
       className: config.className || defaultClassName,
+      targetPosition: defaultTargetPosition,
+      sourcePosition: defaultSourcePosition,
     });
 
     if (parentNodeId) {
@@ -50,4 +54,5 @@ export function createTreeDiagram(
   processNodeConfig(rootNodeConfig);
   createDiagram(diagramId, nodes, edges, elkOptions);
   console.info(`Logik für Baumdiagramm "${diagramId}" ausgeführt (createDiagram wurde aufgerufen).`);
+}
 }
