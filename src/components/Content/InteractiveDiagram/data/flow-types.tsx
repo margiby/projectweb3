@@ -1,7 +1,7 @@
-import type { Node, Edge, Position } from '@xyflow/react';
-import type { ElkLayoutOptions } from '../utils/ElkLayout-utils'; 
+import type { Node, Edge, Position, EdgeMarker } from "@xyflow/react";
+import type { ElkLayoutOptions } from "../utils/ElkLayout-utils";
 
-export type NodeDimensions = { 
+export type NodeDimensions = {
   width: number;
   height: number;
 };
@@ -17,20 +17,60 @@ export type NodeData = {
 export type DiagramNode = Node<NodeData>; // Spezifischer Knotentyp
 export type DiagramEdge = Edge<Record<string, unknown>>; // Allgemeiner Datentyp für Kanten
 
-export type TreeFactoryNodeConfig = {
-  id?: string;                     
-  className?: string; 
-  type?: string;            
-  data: NodeData;               
-  children?: TreeFactoryNodeConfig[]; // Kinder für die rekursive Erstellung
+// ====================================================================
+// Gemeinsamer Basistyp für alle Knotenkonfigurationen
+// ====================================================================
+export type BaseNodeConfig = {
+  className?: string;
+  type?: string;
+  data: NodeData;
 };
 
-// Optionen für die Factory-Funktion
-export type TreeFactoryOptions = {
+// ====================================================================
+// Konfigurationen für die Diagramm-Factories
+// ====================================================================
+
+export type DiagramFactoryOptions = {
   defaultClassName?: string;
   nodeIdPrefix?: string;
   defaultNodeType?: string;
   elkOptions?: ElkLayoutOptions;
   defaultTargetPosition?: Position;
   defaultSourcePosition?: Position;
-  };
+};
+
+// --------------------------------------------------------------------
+// Spezifische Konfigurationen für `createTreeDiagram`
+// --------------------------------------------------------------------
+
+export type TreeFactoryNodeConfig = BaseNodeConfig & {
+  id?: string; // id ist optional, da sie generiert werden kann
+  children?: TreeFactoryNodeConfig[]; // Kinder für die rekursive Erstellung
+};
+
+// --------------------------------------------------------------------
+// Spezifische Konfigurationen für `createFlexibleDiagram`
+// --------------------------------------------------------------------
+
+export type DiagramNodeConfig = BaseNodeConfig & {
+  id: string; // id ist hier zwingend erforderlich
+};
+
+// Konfiguration für eine Kante in einem flexiblen Diagramm.
+
+export type DiagramEdgeConfig = {
+  source: string;
+  target: string | string[]; // Unterstützt 1-zu-n-Beziehungen
+  id?: string;
+  style?: React.CSSProperties;
+  animated?: boolean;
+  markerStart?: EdgeMarker;
+  markerEnd?: EdgeMarker;
+  [key: string]: unknown;
+};
+
+// Die gesamte Konfiguration für ein flexibles Diagramm
+export type FlexibleDiagramConfig = {
+  nodes: DiagramNodeConfig[];
+  edges: DiagramEdgeConfig[];
+};

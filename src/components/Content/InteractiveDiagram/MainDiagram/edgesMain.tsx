@@ -1,8 +1,8 @@
-import type { DiagramEdge } from "../data/flow-types";
+import type { DiagramEdgeConfig } from "../data/flow-types";
 import { MarkerType } from '@xyflow/react';
 
 // Definition der Kanten
-export const initialEdges: DiagramEdge[] = [
+export const mainDiagramEdges: DiagramEdgeConfig[] = [
   // 1. Eigenschaften → Produkte
   {
     id: "e1",
@@ -46,6 +46,7 @@ export const initialEdges: DiagramEdge[] = [
     target: "versorgungskonzepte",
     markerStart: { type: MarkerType.ArrowClosed },
     markerEnd: { type: MarkerType.ArrowClosed },
+    animated: true,
   },
   // 7. Parameter (bei Prozessketten) → Prozessketten
   {
@@ -82,6 +83,7 @@ export const initialEdges: DiagramEdge[] = [
     target: "versorgungskonzepte",
     markerStart: { type: MarkerType.ArrowClosed },
     markerEnd: { type: MarkerType.ArrowClosed },
+    animated: true,
   },
   // 12. Parameter (bei Versorgungskonzepte) ↔ Versorgungskonzepte 
   {
@@ -106,6 +108,7 @@ export const initialEdges: DiagramEdge[] = [
     target: 'prozessketten',
     markerStart: { type: MarkerType.ArrowClosed },
     markerEnd: { type: MarkerType.ArrowClosed },
+    animated: true,
   },
   // 15. Prozessketten ↔ Komponenten
   {

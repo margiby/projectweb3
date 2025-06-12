@@ -10,7 +10,10 @@ import {
   nodeDimensionMap,
 } from "../data/diagram-constants";
 
-/* Die Kernlogik für die Layout-Berechnung mit elkjs.*/
+/** Die Kernlogik für die Layout-Berechnung mit elkjs.
+ * https://eclipse.dev/elk/reference.html
+ */
+
 // Initialisiere ELK-Layoutengine
 const elk = new ELK();
 export type ElkLayoutOptions = ELKLayoutOptionsType;
@@ -32,25 +35,30 @@ export const getLayoutedElements = async (
   edgesToLayout: DiagramEdge[],
   options: ElkLayoutOptions // Zusätzliche ELK-Layoutoptionen
 ): Promise<{ nodes: DiagramNode[]; edges: DiagramEdge[] }> => {
-  
-  // 1. Konvertiert React-Flow-Knoten in ELK-Knotenformat mit Dimensionen
+  // 1. Erstellt eine Map für die Dimensionen, um wiederholte Berechnungen zu vermeiden.
+  const nodeDimensionsCache = new Map<string, NodeDimensions>(
+    nodesToLayout.map((n) => [n.id, getNodeDimensions(n.className)])
+  );
+
+  // 2. Konvertiert React-Flow-Knoten in ELK-Knotenformat mit Dimensionen
   const elkNodes: ElkNode[] = nodesToLayout.map((flowNode) => {
-    const { width, height } = getNodeDimensions(flowNode.className);
+    const dims = nodeDimensionsCache.get(flowNode.id)!;
     return {
       id: flowNode.id,
-      width,
-      height,
-      labels: [{ text: flowNode.data.label }], // labels können für komplexere Szenarien (z.B. Ports) genutzt werden, hier für das Hauptlabel.
+      width: dims.width,
+      height: dims.height,
+      labels: [{ text: flowNode.data.label }],
     };
   });
-  // 2. Konvertiert React-Flow-Kanten in ELK-Kantenformat
+
+  // 3. Konvertiert React-Flow-Kanten in ELK-Kantenformat
   const elkEdges: ElkExtendedEdge[] = edgesToLayout.map((flowEdge) => ({
     id: flowEdge.id,
     sources: [flowEdge.source],
     targets: [flowEdge.target],
   }));
 
-  // 3. Erstellt den Graphen, der an ELKjs übergeben wird.
+  // 4. Erstellt den Graphen, der an ELKjs übergeben wird.
   //    Dieser Graph enthält die konvertierten Knoten, Kanten und die Layout-Optionen.
   const graphToLayout: ElkNode = {
     id: "root", // ID für den Wurzelknoten des Graphen
@@ -59,19 +67,18 @@ export const getLayoutedElements = async (
     edges: elkEdges,
   };
 
-  // Try-Catch-Block für asynchrone Layout-Berechnung
+  //=== Try-Catch-Block für asynchrone Layout-Berechnung ===
   try {
     // Führt die Layout-Berechnung mit ELKjs asynchron durch.
     const layoutedGraph = await elk.layout(graphToLayout);
 
     //Transformiert die von ELK berechneten Positionen und Größen zurück auf die React Flow Knoten.
+    const layoutedNodeMap = new Map(
+      layoutedGraph.children?.map((n) => [n.id, n]) ?? []
+    );
     const newNodes = nodesToLayout.map((flowNode) => {
-      const elkNode = layoutedGraph.children?.find((n) => n.id === flowNode.id);
-      const initialDims = getNodeDimensions(flowNode.className); //Ursprüngliche Abmessungen für Fallback
-
-      // Verwendet die von ELK berechneten Dimensionen oder die initialen Dimensionen, falls ELK keine liefert.
-      const finalWidth = elkNode?.width ?? initialDims.width;
-      const finalHeight = elkNode?.height ?? initialDims.height;
+      const elkNode = layoutedNodeMap.get(flowNode.id);
+      const dims = nodeDimensionsCache.get(flowNode.id)!;
 
       return {
         ...flowNode, // Behalte alle ursprünglichen Eigenschaften des React Flow Knotens
@@ -80,34 +87,31 @@ export const getLayoutedElements = async (
           y: elkNode?.y ?? 0,
         },
         // Aktualisiert die Knotengröße mit den von ELK berechneten Werten
-         // Dies stellt sicher, dass React Flow die Knoten mit den von ELK bestimmten Größen rendert.
+        // Dies stellt sicher, dass React Flow die Knoten mit den von ELK bestimmten Größen rendert.
         style: {
           ...(flowNode.style || {}), // Behalte existierende Styles bei
-          width: finalWidth,
-          height: finalHeight,
+          width: elkNode?.width ?? dims.width,
+          height: elkNode?.height ?? dims.height,
         },
       };
     });
     // Die Kanten bleiben strukturell unverändert, ihre Darstellung passt sich den neuen Knotenpositionen an.
     return { nodes: newNodes, edges: edgesToLayout };
-
   } catch (e) {
     console.error("ELK Layout Error:", e);
-    // Im Fehlerfall die Originalknoten zurückgeben, damit die Anwendung nicht abstürzt
-    return {
-      nodes: nodesToLayout.map((n) => {
-        const dims = getNodeDimensions(n.className);
-        return {
-          ...n,
-          position: n.position, // Behalte die ursprüngliche Position bei
-          style: {
-            ...(n.style || {}),
-            width: dims.width,
-            height: dims.height,
-          },
-        };
-      }),
-      edges: edgesToLayout,
-    };
+    // Im Fehlerfall: Originalknoten mit initial berechneten Dimensionen zurückgeben
+    const fallbackNodes = nodesToLayout.map((node) => {
+      const dims = nodeDimensionsCache.get(node.id)!;
+      return {
+        ...node,
+        style: {
+          ...(node.style || {}),
+          width: dims.width,
+          height: dims.height,
+        },
+      };
+    });
+
+    return { nodes: fallbackNodes, edges: edgesToLayout };
   }
 };

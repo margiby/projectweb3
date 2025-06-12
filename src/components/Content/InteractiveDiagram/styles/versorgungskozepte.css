@@ -1,5 +1,5 @@
 /* Für das TECH4BIOWASTE Diagramm (Versorgungskonzepte) */
-/* .tech-logo-node.react-flow__node { 
+.tech-logo-node.react-flow__node { 
     background-color: #166534; 
     color: #ffffff; 
     font-weight: bold;
@@ -24,4 +24,4 @@
     border-radius: 8px;
     padding: 8px 12px;
     font-size: 1rem;
-} */
+}

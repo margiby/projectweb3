@@ -22,12 +22,17 @@ export const DEFAULT_NODE_HEIGHT = 50;
  * ELK benötigt diese expliziten Abmessungen für das Layout.
  */
 export const nodeDimensionMap: Record<string, NodeDimensions> = {
+  "default-node": { width: DEFAULT_NODE_WIDTH, height: DEFAULT_NODE_HEIGHT },
+  /*Hauptdiagramm Knoten */
   "circle-node": { width: 130, height: 130 },
   "produkte-node": { width: 200, height: 80 },
-  "komponenten-node": { width: 470, height: 100 },
+  "komponenten-node": { width: 470, height: 110 },
   "mix-node": { width: 150, height: 60 },
-  "prozessketten-node": { width: 280, height: 70 },
+  "prozessketten-node": { width: 280, height: 80 },
   "versorgungsaufgaben-node": { width: 470, height: 110 },
   "versorgungskonzepte-node": { width: 400, height: 80 },
-
+  /* VSK Subdiagramme */
+  "tech-logo-node": { width: 250, height: 80 },
+  "tech-category-node": { width: 200, height: 60 },
+  "tech-item-node": { width: 180, height: 50 },
 };

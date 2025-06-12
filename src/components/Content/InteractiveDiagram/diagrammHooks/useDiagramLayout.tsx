@@ -10,168 +10,134 @@ import { diagramRegistry } from "../utils/diagramRegistry";
 import { useDiagramStore } from "./useDiagramStore";
 
 /**
- * Custom Hook zur Verwaltung der Logik eines interaktiven Diagramms.
- * Er kümmert sich um:
- * - Zustand der Knoten (Nodes) und Kanten (Edges).
- * - Berechnung und Aktualisierung des Layouts mithilfe von ELK.
- * - Behandlung von Größenänderungen des Containers.
- * - Verwaltung des Ladezustands.
+ * Custom Hook für die Verwaltung des Diagramm-Layouts
+ * - Berechnet Positionen der Knoten und Kanten via ELK
+ * - Reagiert auf Größenänderungen des Diagramm-Containers
+ * - Stellt Zustand für React Flow bereit
  */
+
 export function useDiagramLayout() {
+  // React Flow node/edge state
   const [nodes, setNodes, onNodesChange] = useNodesState<DiagramNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<DiagramEdge>([]);
-  const [isLoadingLayout, setIsLoadingLayout] = useState<boolean>(true);
-  const [hasLayouted, setHasLayouted] = useState<boolean>(false);
+
+  // Status für Ladeanzeige und Layout-Fortschritt
+  const [isLoadingLayout, setIsLoadingLayout] = useState(true);
+  const [hasLayouted, setHasLayouted] = useState(false);
+
+  // Referenz auf den Diagramm-Container im DOM
   const flowContainerRef = useRef<HTMLDivElement>(null);
   const layoutTimeout = useRef<number | null>(null);
-  const { fitView } = useReactFlow(); // React Flow Funktion zum Anpassen der Ansicht
-  const { diagramId } = useDiagramStore(); // Aktuelle ID des anzuzeigenden Diagramms
+
+  const { fitView } = useReactFlow(); // Ansicht automatisch anpassen
+  const { diagramId } = useDiagramStore(); // Aktuell ausgewähltes Diagramm
 
   /**
-   * Berechnet die Positionen der Knoten und Kanten mithilfe von ELK
-   * und aktualisiert den Zustand für React Flow.
+   * Hauptfunktion: Callback für Layout-Berechnung
+   * Diese Funktion wird aufgerufen, wenn das Diagramm-Layout neu berechnet werden muss
    */
   const layoutElements = useCallback(
     async (containerWidth?: number) => {
       setIsLoadingLayout(true);
-      console.log(
-        `[useDiagramLayout] layoutElements START für diagramId: "${diagramId}"`
-      );
 
-      // Lade die Daten (Knoten, Kanten, spezifische ELK-Optionen) für das aktuelle Diagramm
-      // Greife auf "root" als Fallback zurück, falls die diagramId nicht im Registry ist.
       const currentDiagramData =
-        diagramRegistry[diagramId] ?? diagramRegistry["root"];
-      console.log(
-        "[useDiagramLayout] currentDiagramData ermittelt:",
-        currentDiagramData
-      );
+        diagramRegistry[diagramId] || diagramRegistry["root"];
 
-      // Sicherheitsprüfung: Stelle sicher, dass gültige Diagrammdaten vorhanden sind
+      // Validierung: Diagramm muss gültige Knoten und Kanten enthalten
+
       if (
         !currentDiagramData ||
-        !currentDiagramData.nodes ||
-        !currentDiagramData.edges ||
         !Array.isArray(currentDiagramData.nodes) ||
         !Array.isArray(currentDiagramData.edges)
       ) {
         console.error(
-          `FEHLER: Kein gültiges Diagramm-Objekt für ID "${diagramId}" oder Fallback "root" gefunden`
+          `[useDiagramLayout] Ungültige Diagrammdaten für ID "${diagramId}"`
         );
         setNodes([]);
         setEdges([]);
-        setHasLayouted(true); // Wichtig, um Ladeanzeige zu beenden
+        setHasLayouted(true);
         setIsLoadingLayout(false);
         return;
       }
 
-      // --- Dynamische ELK-Optionen bestimmen ---
-      // 1. Starte mit einer Kopie der globalen Basisoptionen
-      let resolvedElkOptions: ElkLayoutOptions = { ...BASE_ELK_OPTIONS };
+      // ELK-Layout-Optionen bestimmen (Diagramm-spezifisch oder global)
+      const resolvedElkOptions: ElkLayoutOptions = {
+        ...(currentDiagramData.elkOptions ?? BASE_ELK_OPTIONS),
+      };
 
-      // 2. Wenn das aktuelle Diagramm spezifische Optionen hat, mische sie hinzu
-      //    (spezifische Optionen überschreiben dabei die Basisoptionen)
-      if (currentDiagramData.elkOptions) {
-        console.log(
-          `[useDiagramLayout] Spezifische ELK-Optionen für Diagramm "${diagramId}" gefunden:`,
-          currentDiagramData.elkOptions
-        );
-        resolvedElkOptions = {
-          ...resolvedElkOptions,
-          ...currentDiagramData.elkOptions,
-        };
-      } else {
-        console.log(
-          `[useDiagramLayout] Keine spezifischen ELK-Optionen für "${diagramId}", verwende Basisoptionen.`
-        );
-      }
-
-      // 3. Wende responsive Anpassungen auf die bereits aufgelösten Optionen an
-      //    Diese überschreiben ggf. vorher gesetzte Werte für Abstände.
+      // Auf kleineren Screens: engere Abstände
       if (containerWidth && containerWidth < 768) {
         resolvedElkOptions["elk.spacing.nodeNode"] = "10";
         resolvedElkOptions["elk.spacing.edgeNode"] = "10";
       }
-      console.log(
-        "[useDiagramLayout] Finale ELK-Optionen für Layout:",
-        resolvedElkOptions
-      );
-      // --- Ende Dynamische ELK-Optionen ---
 
-      // Erstelle Kopien der Knoten und Kanten für die Verarbeitung
       const nodesToProcess = currentDiagramData.nodes.map((n) => ({ ...n }));
       const edgesToProcess = currentDiagramData.edges.map((e) => ({ ...e }));
 
       try {
-        // Asynchrone Berechnung des Layouts
+        // Layout berechnen
         const { nodes: layoutedNodes, edges: layoutedEdges } =
           await getLayoutedElements(
             nodesToProcess,
             edgesToProcess,
-            resolvedElkOptions // Übergebe die final bestimmten Optionen
+            resolvedElkOptions
           );
 
-        setNodes(layoutedNodes); // Aktualisiere Knoten im React Flow Zustand
-        setEdges(layoutedEdges); // Aktualisiere Kanten im React Flow Zustand
+        // Aktualisiere Zustand mit berechneten Positionen
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
 
-        // Passe die Ansicht nach dem Layout an
+        // Zoom/Pan automatisch nach Layout
         requestAnimationFrame(() => {
           fitView({ padding: 0.05, duration: 300 });
-          setHasLayouted(true); // Markiere Layout als abgeschlossen
+          setHasLayouted(true);
         });
       } catch (err) {
-        console.error("Fehler bei der Layoutberechnung:", err, {
-          nodesToProcess,
-          edgesToProcess,
-        });
-        // Fallback: Zeige die ursprünglichen (ungelayouteten) Knoten und Kanten des aktuellen Diagramms an
+        console.error("Fehler bei ELK Layout:", err);
+        // Fallback: Ursprüngliche Nodes verwenden
         setNodes(currentDiagramData.nodes);
         setEdges(currentDiagramData.edges);
         setHasLayouted(true);
       } finally {
-        setIsLoadingLayout(false); // Beende den Ladezustand
+        setIsLoadingLayout(false);
       }
     },
-    [diagramId, setNodes, setEdges, fitView] // Abhängigkeiten für useCallback
+    [diagramId, setNodes, setEdges, fitView]
   );
 
   /**
-   * Effekt für das initiale Layout und die Beobachtung von Größenänderungen des Containers.
+   * Hilfsfunktion: Entprellt Layout-Neuberechnung bei Größenänderung
+   */
+  const debounceLayout = (width: number) => {
+    if (layoutTimeout.current) clearTimeout(layoutTimeout.current);
+    layoutTimeout.current = window.setTimeout(() => {
+      layoutElements(width);
+    }, 250);
+  };
+
+  /**
+   * useEffect:
+   * - Initiale Layout-Berechnung
+   * - Setup für ResizeObserver → bei Container-Resize neues Layout
    */
   useEffect(() => {
-    console.log(
-      `[useDiagramLayout] useEffect triggered. diagramId: "${diagramId}". flowContainerRef.current vorhanden:`,
-      !!flowContainerRef.current
-    );
-    /**
-     * Rufe layoutElements initial auf. containerWidth wird undefined sein, wenn das Ref noch nicht bereit ist,
-     * aber layoutElements sollte damit umgehen können (durch den optionalen Parameter).
-     *  Ein `if (!flowContainerRef.current) return;` würde den ersten Aufruf blockieren, wenn das Ref noch nicht da ist.
-     * Hier wird es direkt versucht.
-     */
     layoutElements(flowContainerRef.current?.clientWidth);
 
-    const currentFlowContainer = flowContainerRef.current; // Wert für Cleanup speichern
-    if (!currentFlowContainer) {
+    const container = flowContainerRef.current;
+    if (!container) {
       console.warn(
-        "[useDiagramLayout] useEffect: flowContainerRef ist beim Setup des ResizeObserver noch nicht gesetzt."
+        "[useDiagramLayout] ContainerRef fehlt → kein ResizeObserver"
       );
-      return; // Ohne Ref kann kein Observer erstellt werden
+      return;
     }
 
     const observer = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        if (layoutTimeout.current) clearTimeout(layoutTimeout.current);
-        layoutTimeout.current = window.setTimeout(() => {
-          console.log(
-            "[useDiagramLayout] ResizeObserver ruft layoutElements auf."
-          );
-          layoutElements(entry.contentRect.width);
-        }, 250);
+      for (const entry of entries) {
+        debounceLayout(entry.contentRect.width);
       }
     });
 
-    observer.observe(currentFlowContainer);
+    observer.observe(container);
 
     return () => {
       observer.disconnect();
@@ -179,6 +145,7 @@ export function useDiagramLayout() {
     };
   }, [layoutElements]);
 
+  // Exporte für das Diagramm-UI
   return {
     nodes,
     edges,

@@ -1,18 +1,18 @@
-import { createDiagram, tryRegisterDiagram } from "../utils/diagramRegistry";
-import { initialNodes } from "./nodesMain";
-import { initialEdges } from "./edgesMain";
+import { tryRegisterDiagram } from "../utils/diagramRegistry";
+import { createFlexibleDiagram } from "../utils/diagramFactory";
+import { mainDiagramNodes } from "./nodesMain";
+import { mainDiagramEdges } from "./edgesMain";
+import type { FlexibleDiagramConfig } from "../data/flow-types";
 
 export function registerMain(): void {
-  // Hauptdiagramm unter dem Schlüssel "root"
   tryRegisterDiagram("root", () => {
     console.log("AKTION: Registriere Main Diagram (root)...");
 
-// Wir rufen keine elKOptions auf, weil es wird schon die Standartwerte benutzen.
-    if (initialNodes && initialEdges) {
-      createDiagram("root", initialNodes, initialEdges);
-      // Die Erfolgsmeldung kommt dann von createDiagram.
-    } else {
-      console.error("[MainDiagram/index.tsx] initialNodes oder initialEdges sind nicht verfügbar!");
-    }
+    const config: FlexibleDiagramConfig = {
+      nodes: mainDiagramNodes,
+      edges: mainDiagramEdges,
+    };
+
+    createFlexibleDiagram("root", config, {});
   });
 }

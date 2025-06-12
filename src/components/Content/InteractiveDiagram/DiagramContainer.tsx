@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
-import { ReactFlow, Background, Controls, MiniMap } from "@xyflow/react";
+import { ReactFlow, Controls } from "@xyflow/react";
 import { FormattedMessage } from "react-intl";
-import { useDiagramLayout } from "./diagrammHooks/useDiagramLayout";
+import  { useDiagramLayout } from "./diagrammHooks/useDiagramLayout";
 import { handleNodeClick } from "./diagrammHooks/diagramEventHandler";
 import { useDiagramStore } from "./diagrammHooks/useDiagramStore";
 /**
@@ -77,10 +77,10 @@ const DiagramView = (): ReactElement => {
             // fitView // Sorgt dafür, dass das Diagramm initial eingepasst wird (kann auch über Hook gesteuert werden)
             attributionPosition="bottom-right" // Position der React Flow Attribution
           >
-            <Background />{" "}
-            {/*  Hintergrund des Diagramms (z.B. Punkte oder Linien) */}
+            {/* <Background />
+             Hintergrund des Diagramms (z.B. Punkte oder Linien) */}
             <Controls /> {/* Steuerelemente für Zoom und Navigation */}
-            <MiniMap /> {/* Kleine Übersichtskarte des Diagramms */}
+            {/* <MiniMap /> Kleine Übersichtskarte des Diagramms */}
           </ReactFlow>
         )}
       </div>
