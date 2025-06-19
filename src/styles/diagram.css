@@ -1,0 +1,145 @@
+.react-flow__node {
+  font-size: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: absolute;
+  box-sizing: border-box;
+  border-width: 3px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  padding: 8px 12px;
+
+}
+
+.react-flow__node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  filter: brightness(1.05);
+
+}
+
+.react-flow__node-label {
+  font-weight: bold;
+  color: rgba(53, 48, 48, 0.801);
+  text-align: center;
+  padding: 10px;
+}
+
+
+.produkte-node,
+.mix-node,
+.komponenten-node,
+.prozessketten-node,
+.versorgungsaufgaben-node,
+.versorgungskonzepte-node {
+  font-weight: bold;
+  color: rgba(53, 48, 48, 0.801);
+  border-radius: 20px;
+  padding: 10px 20px;
+}
+
+.circle-node {
+  font-size: 18px;
+  background-color: #edf1ee;
+  border-color: #b6d4c1;
+  color: #6b8570;
+  border-radius: 50%;
+  padding: 10px;
+  font-weight: bold;
+}
+
+.produkte-node {
+  background-color: #f7fee7;
+  border-color: #a3e635;
+  color: #4d7c0f;
+}
+
+.komponenten-node {
+  background-color: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #075985;
+}
+
+.mix-node {
+  background-color: #ffe4e6;
+  border-color: #fda4af;
+  color: #9f1239;
+}
+
+.prozessketten-node {
+  background-color: #e0e7ff;
+  border-color: #a5b4fc;
+  color: #3730a3;
+}
+
+.versorgungsaufgaben-node {
+  background-color: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.versorgungskonzepte-node {
+  background-color: #d1fae5;
+  border-color: #6ee7b7;
+  color: #065f46;
+
+}
+
+.circle-node .react-flow__node-label,
+.produkte-node .react-flow__node-label,
+.komponenten-node .react-flow__node-label,
+.mix-node .react-flow__node-label,
+.prozessketten-node .react-flow__node-label,
+.versorgungsaufgaben-node .react-flow__node-label,
+.versorgungskonzepte-node .react-flow__node-label {
+  white-space: pre-wrap;
+  /* Zeilenumbruch bei langen Texten */
+}
+
+.diagram-reactflow-container {
+  height: 600px;
+  width: 100%;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  position: relative;
+  /* Oft nützlich für untergeordnete Elemente wie Controls oder Minimap */
+}
+
+
+.diagram-loading-overlay {
+  position: absolute;
+  /* Positioniert das Overlay über dem gesamten Container */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(249, 249, 249, 0.9);
+  z-index: 10;
+  /* Stellt sicher, dass das Overlay über anderen Elementen im Container liegt */
+}
+
+.loading-text {
+  font-style: italic;
+  color: #777;
+  font-size: 1.2em;
+}
+
+.react-flow__controls {
+  box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+  border-radius: 4px;
+}
+
+.react-flow__controls button {
+  background-color: #fff;
+  border-bottom: 1px solid #dbdbdb;
+}
+
+.react-flow__controls button:hover {
+  background-color: #f5f5f5;
+}
